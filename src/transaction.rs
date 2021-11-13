@@ -1,80 +1,50 @@
-use super::*;
-use std::collections::HashSet;
+use ed25519_dalek::Keypair;
+use ed25519_dalek::PublicKey;
+use ed25519_dalek::Signature;
+use ed25519_dalek::Signer;
+use ed25519_dalek::Verifier;
 
-#[derive(Clone)]
-pub struct Output {
-    pub to_addr: Address,
-    pub value: u64,
-}
-
-impl Hashable for Output {
-    fn bytes (&self) -> Vec<u8> {
-        let mut bytes = vec![];
-
-        bytes.extend(self.to_addr.as_bytes());
-        bytes.extend(&u64_bytes(&self.value));
-
-        bytes
-    }
-}
-
+#[derive(Debug, Clone)]
 pub struct Transaction {
-    pub inputs: Vec<Output>,
-    pub outputs: Vec<Output>,
+    pub sender: Option<PublicKey>,
+    pub receiver: Option<PublicKey>,
+    pub amount: f32,
+    pub signature: Option<Signature>,
 }
 
 impl Transaction {
-    pub fn input_value (&self) -> u64 {
-        self.inputs
-            .iter()
-            .map(|input| input.value)
-            .sum()
-    }
-
-    pub fn output_value (&self) -> u64 {
-        self.outputs
-            .iter()
-            .map(|output| output.value)
-            .sum()
-    }
-
-    pub fn input_hashes (&self) -> HashSet<Hash> {
-        self.inputs
-            .iter()
-            .map(|input| input.hash())
-            .collect::<HashSet<Hash>>()
-    }
-
-    pub fn output_hashes (&self) -> HashSet<Hash> {
-        self.outputs
-            .iter()
-            .map(|output| output.hash())
-            .collect::<HashSet<Hash>>()
-    }
-
-    pub fn is_coinbase (&self) -> bool {
-        self.inputs.len() == 0
-    }
-}
-
-impl Hashable for Transaction {
-    fn bytes (&self) -> Vec<u8> {
+    pub fn bytes(&self) -> Vec<u8> {
         let mut bytes = vec![];
-
-        bytes.extend(
-            self.inputs
-                .iter()
-                .flat_map(|input| input.bytes())
-                .collect::<Vec<u8>>()
-        );
-
-        bytes.extend(
-            self.outputs
-                .iter()
-                .flat_map(|output| output.bytes())
-                .collect::<Vec<u8>>()
-        );
+        if let Some(sender) = self.sender {
+            bytes.extend(sender.as_bytes());
+        }
+        if let Some(receiver) = self.receiver {
+            bytes.extend(receiver.as_bytes());
+        }
+        bytes.extend(&self.amount.to_bits().to_ne_bytes());
 
         bytes
+    }
+
+    pub fn calculate_hash(&self) -> Vec<u8> {
+        crypto_hash::digest(crypto_hash::Algorithm::SHA256, &self.bytes())
+    }
+
+    pub fn sign_transaction(&mut self, key: Keypair) {
+        if let Some(p) = self.sender {
+            if p != key.public {
+                panic!("You can not sign other's transaction!!!")
+            } else {
+                self.signature = Some(key.sign(&self.calculate_hash()));
+            }
+        }
+    }
+
+    pub fn is_valid_transaction(&self) -> bool {
+        match (self.sender, self.signature) {
+            (Some(p), Some(s)) if p.verify(&self.calculate_hash(), &s).is_ok() => true,
+            (None, _) => true, // For miner reward
+            _ => false,
+        }
     }
 }

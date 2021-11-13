@@ -1,88 +1,82 @@
-type Hash = Vec<u8>;
-type Address = String;
-
-use std::time::{ SystemTime, UNIX_EPOCH };
-
-pub fn now () -> u128 {
-    let duration = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-    ;
-
-    duration.as_secs() as u128 * 1000 + duration.subsec_millis() as u128
-}
-
-pub fn u32_bytes (u: &u32) -> [u8; 4] {
-    [
-        (u >> 8 * 0x0) as u8,
-        (u >> 8 * 0x1) as u8,
-        (u >> 8 * 0x2) as u8,
-        (u >> 8 * 0x3) as u8,
-    ]
-}
-
-pub fn u64_bytes (u: &u64) -> [u8; 8] {
-    [
-        (u >> 8 * 0x0) as u8,
-        (u >> 8 * 0x1) as u8,
-        (u >> 8 * 0x2) as u8,
-        (u >> 8 * 0x3) as u8,
-
-        (u >> 8 * 0x4) as u8,
-        (u >> 8 * 0x5) as u8,
-        (u >> 8 * 0x6) as u8,
-        (u >> 8 * 0x7) as u8,
-    ]
-}
-
-pub fn u128_bytes (u: &u128) -> [u8; 16] {
-    [
-        (u >> 8 * 0x0) as u8,
-        (u >> 8 * 0x1) as u8,
-        (u >> 8 * 0x2) as u8,
-        (u >> 8 * 0x3) as u8,
-
-        (u >> 8 * 0x4) as u8,
-        (u >> 8 * 0x5) as u8,
-        (u >> 8 * 0x6) as u8,
-        (u >> 8 * 0x7) as u8,
-
-        (u >> 8 * 0x8) as u8,
-        (u >> 8 * 0x9) as u8,
-        (u >> 8 * 0xa) as u8,
-        (u >> 8 * 0xb) as u8,
-
-        (u >> 8 * 0xc) as u8,
-        (u >> 8 * 0xd) as u8,
-        (u >> 8 * 0xe) as u8,
-        (u >> 8 * 0xf) as u8,
-    ]
-}
-
-pub fn difficulty_bytes_as_u128 (v: &Vec<u8>) -> u128 {
-    ((v[31] as u128) << 0xf * 8) |
-    ((v[30] as u128) << 0xe * 8) |
-    ((v[29] as u128) << 0xd * 8) |
-    ((v[28] as u128) << 0xc * 8) |
-    ((v[27] as u128) << 0xb * 8) |
-    ((v[26] as u128) << 0xa * 8) |
-    ((v[25] as u128) << 0x9 * 8) |
-    ((v[24] as u128) << 0x8 * 8) |
-    ((v[23] as u128) << 0x7 * 8) |
-    ((v[22] as u128) << 0x6 * 8) |
-    ((v[21] as u128) << 0x5 * 8) |
-    ((v[20] as u128) << 0x4 * 8) |
-    ((v[19] as u128) << 0x3 * 8) |
-    ((v[18] as u128) << 0x2 * 8) |
-    ((v[17] as u128) << 0x1 * 8) |
-    ((v[16] as u128) << 0x0 * 8)
-}
-
 mod block;
-pub use crate::block::Block;
-mod hashable;
-pub use crate::hashable::Hashable;
-mod blockchain;
-pub use crate::blockchain::Blockchain;
+pub use block::Block;
 pub mod transaction;
-pub use crate::transaction::Transaction;
+pub use transaction::Transaction;
+pub mod blockchain;
+pub use blockchain::Blockchain;
+pub mod wallet;
+use std::time::Instant;
+pub use wallet::Wallet;
+
+const DIFFICULT_LEVEL: i32 = 2;
+const MINING_REWARD: f32 = 100f32;
+
+pub fn now() -> u64 {
+    Instant::now().elapsed().as_secs()
+}
+
+/// Calculate crypto hash of block
+///  # Example
+///
+/// ```
+/// use rustblockchainlib::now;
+/// use rustblockchainlib::calculate_hash;
+/// use rustblockchainlib::Transaction;
+///
+/// let time:u64 = 1573978703u64;
+/// let pre_hash = "fd1afb6022cd4d47c890961c533928eacfe8219f1b2524f7fb2a61847ddf8c27".to_owned();
+/// let transactions = vec![
+///       Transaction {
+///        sender: None,
+///        receiver: None,
+///        amount: 2000.0,
+///        signature: None,
+///    }
+///     ];
+/// let nonce :u64= 0u64;
+///
+/// let hash = calculate_hash(&pre_hash, &transactions, &time, &nonce);
+///
+/// assert_eq!(hash, "80df682cb0547cf91f2a9c4042c80e201bf4e2dfe074dfae3f0070edbbd02a5e");
+///
+/// ```
+///
+pub fn calculate_hash(
+    pre_hash: &str,
+    transactions: &Vec<Transaction>,
+    timestamp: &u64,
+    nonce: &u64,
+) -> String {
+    let mut bytes = vec![];
+    bytes.extend(&timestamp.to_ne_bytes());
+    bytes.extend(
+        transactions
+            .iter()
+            .flat_map(|transaction| transaction.bytes())
+            .collect::<Vec<u8>>(),
+    );
+    bytes.extend(pre_hash.as_bytes());
+    bytes.extend(&nonce.to_ne_bytes());
+
+    crypto_hash::hex_digest(crypto_hash::Algorithm::SHA256, &bytes)
+}
+
+///
+/// Create difficulty string target, to compare with hash
+/// # Example
+///
+/// ```
+/// use rustblockchainlib::get_difficult_string;
+///
+/// let target = get_difficult_string();
+/// assert_eq!(target, "00")
+/// ```
+///
+
+pub fn get_difficult_string() -> String {
+    let mut s = String::new();
+    for _i in 0..DIFFICULT_LEVEL {
+        s.push_str("0");
+    }
+    s
+}

@@ -6,14 +6,15 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-name = "blockchainlib"
+name = "rustblockchainlib"
 path = "src/lib.rs"
 
 [[bin]]
-name = "blockchain"
+name = "rust_blockchain"
 path = "src/main.rs"
 
 [dependencies]
-hex = "0.3.2"
-crypto-hash = "0.3.3"
+crypto-hash = "0.3.4"
+rand = "0.7.3"
+ed25519-dalek = "1.0.1"
 
