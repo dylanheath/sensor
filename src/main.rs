@@ -4,31 +4,26 @@ use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
 
+use tentacle::{
+    builder::{MetaBuilder, ServiceBuilder},
+    bytes::Bytes,
+    context::{ProtocolContext, ProtocolContextMutRef, ServiceContext},
+    secio::{peer_id::PeerId, SecioKeyPair},
+    service::{ProtocolHandle, ServiceEvent, TargetProtocol, TargetSession},
+    traits::{ServiceHandle, ServiceProtocol},
+    SessionId,
+};
+
+//using tentacle for peer to peer between nodes and clients
+
 //take transaction requests from clients with scaling
 // get client wallet public key
 //spawn threads for mining while listening
 
 
 
+
 fn main() {
-    let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
-
-    for stream in listener.incoming() {
-        let stream = stream.unwrap();
-
-        handle_connection(stream);
-    }
-}
-
-fn handle_connection(mut stream: TcpStream) {
-    let mut buffer = [0; 512];
-
-    stream.read(&mut buffer).unwrap();
-
-    println!("Request: {}", String::from_utf8_lossy(&buffer[..]));
-}
-
-fn builder() {
     let mut blockchain = Blockchain::new();
 
     let ryan_key = Wallet::new();

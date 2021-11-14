@@ -17,4 +17,5 @@ path = "src/main.rs"
 crypto-hash = "0.3.4"
 rand = "0.7.3"
 ed25519-dalek = "1.0.1"
+tentacle = { version = "0.3", features = ["molc"] }
 
