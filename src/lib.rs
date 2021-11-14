@@ -8,7 +8,7 @@ pub mod wallet;
 use std::time::Instant;
 pub use wallet::Wallet;
 
-const DIFFICULT_LEVEL: i32 = 2;
+const DIFFICULT_LEVEL: i32 = 5;
 const MINING_REWARD: f32 = 100f32;
 
 pub fn now() -> u64 {

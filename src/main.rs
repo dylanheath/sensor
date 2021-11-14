@@ -1,7 +1,34 @@
 use ed25519_dalek::Keypair;
 use rustblockchainlib::*;
+use std::io::prelude::*;
+use std::net::TcpListener;
+use std::net::TcpStream;
+
+//take transaction requests from clients with scaling
+// get client wallet public key
+//spawn threads for mining while listening
+
+
 
 fn main() {
+    let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
+
+    for stream in listener.incoming() {
+        let stream = stream.unwrap();
+
+        handle_connection(stream);
+    }
+}
+
+fn handle_connection(mut stream: TcpStream) {
+    let mut buffer = [0; 512];
+
+    stream.read(&mut buffer).unwrap();
+
+    println!("Request: {}", String::from_utf8_lossy(&buffer[..]));
+}
+
+fn builder() {
     let mut blockchain = Blockchain::new();
 
     let ryan_key = Wallet::new();
@@ -63,3 +90,6 @@ fn main() {
     println!("{}", blockchain.is_valid_chain());
     println!("{:#?}", blockchain);
 }
+
+
+//after blocked has been mined broadcast to other nodes
