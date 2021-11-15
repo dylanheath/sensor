@@ -18,4 +18,9 @@ crypto-hash = "0.3.4"
 rand = "0.7.3"
 ed25519-dalek = "1.0.1"
 tentacle = { version = "0.3", features = ["molc"] }
+tokio = "0.2"
+futures = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+log = "0.4"
 
