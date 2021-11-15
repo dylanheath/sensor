@@ -29,7 +29,7 @@ use tentacle::{
 // get client wallet public key
 //spawn threads for mining while listening
 
-
+//set up local network testing with multiplexing 
 
 
 fn main() {
