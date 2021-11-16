@@ -31,6 +31,8 @@ use tentacle::{
 
 //set up local network testing with multiplexing 
 
+//message handling should be looped
+
 
 fn main() {
     let mut blockchain = Blockchain::new();
